@@ -22,6 +22,17 @@ except ImportError:
 from daguerre.validators import FileTypeValidator
 from daguerre.utils.adjustments import get_adjustment_class, adjustments, DEFAULT_ADJUSTMENT
 
+# options for thumb save
+save_format_options = getattr(settings, "DAGUERRE_SAVE_OPTIONS", 
+	{
+		'JPEG': {'progressive': True, 'quality':50},
+		'PNG' : {'optimize':True},
+		'GIF' : {},
+	})
+
+# thumb file format. if None use same as source
+save_format_force = getattr(settings, "DAGUERRE_FORCE_FORMAT", None)
+
 
 class ImageManager(models.Manager):
 	def for_storage_path(self, storage_path):
@@ -176,7 +187,19 @@ class AdjustedImageManager(models.Manager):
 			filename = f.generate_filename(adjusted, filename)
 
 			temp = NamedTemporaryFile()
-			im.save(temp, format=adjustment.format)
+			#im.save(temp, format=adjustment.format)
+			
+			outfmt = adjustment.format
+			if not save_format_force is None:
+				outfmt = save_format_force
+				filename = filename + "." + outfmt.lower()
+				
+			
+			outopts = {}
+			if outfmt in save_format_options:
+				outopts = save_format_options[outfmt]
+			im.save(temp, format=outfmt, options=save_format_options[outfmt])
+			
 			adjusted.adjusted = File(temp, name=filename)
 			# Try to handle race conditions gracefully.
 			try:
