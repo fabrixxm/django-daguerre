@@ -16,7 +16,7 @@ setup(
 		include_package_data=True,
 		zip_safe=False,
 		install_requires=[
-			'PIL',
+			'Pillow',
 		],
 		extras_require={
 			'docs': ["sphinx>=1.0"],
